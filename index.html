@@ -10,17 +10,17 @@ body { font-family: Arial; direction: rtl; background: #eef2f7; padding: 20px; }
 .container { max-width: 1200px; margin: auto; }
 .box { background: #fff; padding: 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
 h3 { text-align: center; color: #333; margin-bottom: 20px; }
-label { display:block; margin-top:15px; font-weight: bold; color: #555; }
+label { font-weight: bold; color: #555; margin-right: 10px; }
 input { width: 100%; padding: 12px; margin-top:5px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; transition: border 0.3s; }
 input:focus { border-color: #4CAF50; outline: none; }
-button { padding: 12px; cursor: pointer; font-size: 16px; border-radius: 8px; border: none; display: flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.2s ease; }
+button { padding: 10px; cursor: pointer; font-size: 14px; border-radius: 6px; border: none; display: flex; justify-content: center; align-items: center; gap: 6px; transition: all 0.2s ease; }
 button:active { transform: scale(0.95); opacity: 0.8; }
 .generate-btn { width: calc(50% - 5px); background-color: #4CAF50; color: white; }
 .copy-btn { width: calc(50% - 5px); background-color: #2196F3; color: white; }
 .copy-btn:hover { background-color: #0b7dda; }
 .search-container { display: flex; gap: 10px; margin-top: 15px; }
 .search-container input { flex: 1; }
-.search-container button { flex: 0 0 150px; background-color:#FF9800; color:white; border-radius:6px; }
+.search-container button { flex: 0 0 120px; background-color:#FF9800; color:white; border-radius:6px; }
 .table-wrapper { max-height: 600px; overflow-y: auto; margin-top: 20px; }
 table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
 table, th, td { border: 1px solid #ccc; }
@@ -31,6 +31,10 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 .order-popup { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px); background-color: #4CAF50; color: white; padding: 15px 25px; border-radius: 10px; font-size: 18px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2); opacity: 0; pointer-events: none; transition: all 0.5s ease; z-index: 1000; }
 .order-popup.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .last-order { background-color: #FFF59D !important; font-weight:bold; }
+.file-buttons { display:flex; gap:10px; margin-top:10px; }
+.file-buttons button { background-color:#FF5722; color:white; }
+.file-buttons button:hover { background-color:#E64A19; }
+#filterDate { width: 150px; display:inline-block; margin-left:10px; padding:6px; font-size:14px; border-radius:6px; border:1px solid #ccc; }
 </style>
 </head>
 <body>
@@ -51,18 +55,9 @@ tr:nth-child(even) { background-color: #f2f2f2; }
     <button onclick="searchOrder()"><i class="fa fa-search"></i> بحث</button>
 </div>
 
-<h3 style="margin-top:30px;">📋 كل الأرقام المسجلة</h3>
-<label>فلتر حسب التاريخ:</label>
-<input type="date" id="filterDate">
-<button onclick="filterByDate()">اعرض العمليات</button>
-<div class="total" id="filteredTotal" style="margin-top:10px;"></div>
-
-<div style="display:flex; gap:10px; margin-bottom:10px;">
-    <input type="file" id="importFile" accept=".xlsx">
-    <button onclick="importOrders()">استيراد Excel</button>
-    <button onclick="exportToExcel()">تصدير Excel</button>
-</div>
-
+<h3 style="margin-top:30px;">📋 العمليات المسجلة
+<input type="date" id="filterDate" title="اختر تاريخ للفلترة">
+</h3>
 <div class="table-wrapper">
 <table id="ordersTable">
     <thead>
@@ -74,7 +69,15 @@ tr:nth-child(even) { background-color: #f2f2f2; }
     </thead>
     <tbody></tbody>
 </table>
+<div class="total" id="filteredTotal" style="margin-top:10px;"></div>
 </div>
+
+<div class="file-buttons">
+    <input type="file" id="importFile" accept=".xlsx">
+    <button onclick="importOrders()"><i class="fa fa-file-import"></i> استيراد Excel</button>
+    <button onclick="exportToExcel()"><i class="fa fa-file-export"></i> تصدير Excel</button>
+</div>
+
 </div>
 
 <div id="orderPopup" class="order-popup"></div>
@@ -82,6 +85,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 <script>
 let lastOrderNumber = "";
 
+// Helper لتاريخ اليوم
 function getToday() {
   const d = new Date();
   return d.getFullYear().toString() +
@@ -89,11 +93,10 @@ function getToday() {
          String(d.getDate()).padStart(2,'0');
 }
 
-// توليد رقم أمر جديد
+// توليد رقم أمر
 function generateOrder() {
     const amount = document.getElementById("amount").value.trim();
     if(!amount || isNaN(amount)){ alert("من فضلك املأ خانة المبلغ برقم صحيح"); return; }
-
     const today = getToday();
     const key = "orders_" + today;
     let count = localStorage.getItem(key);
@@ -111,32 +114,28 @@ function generateOrder() {
     updateOrdersTable();
 }
 
-// عرض رقم الأمر بشكل مؤقت
+// عرض رقم الأمر مؤقت
 function showOrderPopup(orderNumber) {
     const popup = document.getElementById("orderPopup");
     popup.textContent = `رقم الأمر: ${orderNumber}`;
     popup.classList.add("show");
-}
-
-function hideOrderPopup() {
-    const popup = document.getElementById("orderPopup");
-    popup.classList.remove("show");
+    setTimeout(()=>{ popup.classList.remove("show"); },1500);
 }
 
 // نسخ رقم الأمر
 function copyOrder(){
     if(!lastOrderNumber) return;
     navigator.clipboard.writeText(lastOrderNumber);
-    hideOrderPopup();
     const btn = document.querySelector(".copy-btn");
     btn.innerHTML = '<i class="fa fa-check"></i> تم النسخ';
     setTimeout(()=>{ btn.innerHTML = '<i class="fa fa-copy"></i> نسخ رقم الأمر'; },1000);
 }
 
 // تحديث الجدول
-function updateOrdersTable(){
+function updateOrdersTable(filteredDate="") {
     const tbody = document.getElementById("ordersTable").querySelector("tbody");
     tbody.innerHTML = "";
+    let totalAmount = 0;
 
     let orders = [];
     for(let i=0;i<localStorage.length;i++){
@@ -147,15 +146,20 @@ function updateOrdersTable(){
         }
     }
 
-    // ترتيب تنازلي → آخر رقم فوق
+    // ترتيب تنازلي
     orders.sort((a,b)=> b.order.localeCompare(a.order));
 
-    orders.forEach((item,index)=>{
+    orders.forEach(item=>{
+        const orderDate = new Date(item.date).toISOString().slice(0,10);
+        if(filteredDate && orderDate !== filteredDate) return;
+
         const tr = document.createElement("tr");
         tr.innerHTML = `<td>${item.order}</td><td>${item.amount}</td><td class="date-time">${item.date}</td>`;
-        if(index===0) tr.classList.add("last-order");
         tbody.appendChild(tr);
+        totalAmount += parseFloat(item.amount);
     });
+
+    document.getElementById("filteredTotal").textContent = filteredDate ? "مجموع المبالغ: " + totalAmount : "";
 }
 
 // البحث
@@ -177,35 +181,11 @@ function searchOrder(){
     }
 }
 
-// فلتر حسب التاريخ + مجموع المبالغ
-function filterByDate() {
-    const selectedDate = document.getElementById("filterDate").value;
-    const tbody = document.getElementById("ordersTable").querySelector("tbody");
-    tbody.innerHTML = "";
-    let totalAmount = 0;
-
-    if(!selectedDate){
-        updateOrdersTable();
-        document.getElementById("filteredTotal").textContent = "";
-        return;
-    }
-
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if(key.startsWith("Z-")){
-            const data = JSON.parse(localStorage.getItem(key));
-            const orderDate = new Date(data.date).toISOString().slice(0,10);
-            if(orderDate === selectedDate){
-                const tr = document.createElement("tr");
-                tr.innerHTML = `<td>${key}</td><td>${data.amount}</td><td class="date-time">${data.date}</td>`;
-                tbody.appendChild(tr);
-                totalAmount += parseFloat(data.amount);
-            }
-        }
-    }
-
-    document.getElementById("filteredTotal").textContent = "مجموع المبالغ: " + totalAmount;
-}
+// فلتر التاريخ أوتوماتيك
+document.getElementById("filterDate").addEventListener("change", function(){
+    const selectedDate = this.value;
+    updateOrdersTable(selectedDate);
+});
 
 // تصدير Excel
 function exportToExcel(){
@@ -241,7 +221,8 @@ function importOrders(){
                 localStorage.setItem(r["رقم الأمر"], JSON.stringify({amount:r["المبلغ"], date:r["التاريخ والوقت"]}));
             }
         });
-        updateOrdersTable();
+        const selectedDate = document.getElementById("filterDate").value;
+        updateOrdersTable(selectedDate);
         alert("✅ تم استيراد البيانات من Excel");
     };
     reader.readAsArrayBuffer(file);
@@ -252,7 +233,6 @@ document.getElementById("amount").addEventListener("keydown", function(e){ if(e.
 // Enter للبحث
 document.getElementById("searchInput").addEventListener("keydown", function(e){ if(e.key==="Enter") searchOrder(); });
 
-// تحميل البيانات عند فتح الصفحة
 updateOrdersTable();
 </script>
 </body>
