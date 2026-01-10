@@ -31,10 +31,10 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 .order-popup { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px); background-color: #4CAF50; color: white; padding: 15px 25px; border-radius: 10px; font-size: 18px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2); opacity: 0; pointer-events: none; transition: all 0.5s ease; z-index: 1000; }
 .order-popup.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .last-order { background-color: #FFF59D !important; font-weight:bold; }
-.file-buttons { display:flex; gap:10px; margin-top:10px; }
+.file-buttons { display:flex; gap:10px; margin-top:10px; justify-content:flex-start; }
 .file-buttons button { background-color:#FF5722; color:white; }
 .file-buttons button:hover { background-color:#E64A19; }
-#filterDate { width: 150px; display:inline-block; margin-left:10px; padding:6px; font-size:14px; border-radius:6px; border:1px solid #ccc; }
+#filterDate { width:160px; display:inline-block; padding:6px; font-size:14px; border-radius:6px; border:1px solid #ccc; }
 </style>
 </head>
 <body>
@@ -55,9 +55,11 @@ tr:nth-child(even) { background-color: #f2f2f2; }
     <button onclick="searchOrder()"><i class="fa fa-search"></i> بحث</button>
 </div>
 
-<h3 style="margin-top:30px;">📋 العمليات المسجلة
-<input type="date" id="filterDate" title="اختر تاريخ للفلترة">
+<h3 style="display:flex; align-items:center; justify-content:space-between; margin-top:30px;">
+  📋 العمليات المسجلة
+  <input type="date" id="filterDate" title="اختر تاريخ للفلترة">
 </h3>
+
 <div class="table-wrapper">
 <table id="ordersTable">
     <thead>
@@ -146,7 +148,7 @@ function updateOrdersTable(filteredDate="") {
         }
     }
 
-    // ترتيب تنازلي
+    // ترتيب تنازلي → آخر رقم فوق
     orders.sort((a,b)=> b.order.localeCompare(a.order));
 
     orders.forEach(item=>{
@@ -155,8 +157,10 @@ function updateOrdersTable(filteredDate="") {
 
         const tr = document.createElement("tr");
         tr.innerHTML = `<td>${item.order}</td><td>${item.amount}</td><td class="date-time">${item.date}</td>`;
+        // Highligh آخر أمر تم توليده
+        if(item.order === lastOrderNumber) tr.classList.add("last-order");
         tbody.appendChild(tr);
-        totalAmount += parseFloat(item.amount);
+        if(!filteredDate) totalAmount += parseFloat(item.amount);
     });
 
     document.getElementById("filteredTotal").textContent = filteredDate ? "مجموع المبالغ: " + totalAmount : "";
@@ -233,6 +237,7 @@ document.getElementById("amount").addEventListener("keydown", function(e){ if(e.
 // Enter للبحث
 document.getElementById("searchInput").addEventListener("keydown", function(e){ if(e.key==="Enter") searchOrder(); });
 
+// تحميل البيانات عند فتح الصفحة
 updateOrdersTable();
 </script>
 </body>
