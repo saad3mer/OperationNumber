@@ -10,7 +10,6 @@ body { font-family: Arial; direction: rtl; background: #eef2f7; padding: 20px; }
 .container { max-width: 1200px; margin: auto; }
 .box { background: #fff; padding: 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
 h3 { text-align: center; color: #333; margin-bottom: 20px; }
-label { font-weight: bold; color: #555; margin-right: 10px; }
 input { width: 100%; padding: 12px; margin-top:5px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; transition: border 0.3s; }
 input:focus { border-color: #4CAF50; outline: none; }
 
@@ -49,22 +48,19 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 
 .last-order { background-color: #FFF59D !important; font-weight:bold; }
 
-/* استيراد وتصدير أصغر */
 .file-buttons { display:flex; gap:10px; margin-top:10px; justify-content:flex-start; }
 .file-buttons button { background-color:#FF5722; color:white; padding:8px 14px; font-size:14px; border-radius:6px; }
 .file-buttons button:hover { background-color:#E64A19; }
 .file-buttons input[type="file"] { font-size:14px; padding:4px; }
-
-#filterDate { width:160px; display:inline-block; padding:6px; font-size:14px; border-radius:6px; border:1px solid #ccc; }
 </style>
 </head>
 <body>
 
 <div class="container">
 <div class="box">
-<h3>🔢 توليد رقم أمر</h3>
-<label>المبلغ:</label>
-<input id="amount" placeholder="المبلغ">
+<h3>🔢 Z-Orders</h3>
+<input id="amount" placeholder="ادخل المبلغ">
+
 <div style="display:flex; gap:10px; margin-top:10px;">
     <button class="generate-btn" onclick="generateOrder()"><i class="fa fa-plus"></i> توليد رقم جديد</button>
     <button class="copy-btn" onclick="copyOrder()"><i class="fa fa-copy"></i> نسخ رقم الأمر</button>
@@ -76,10 +72,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }
     <button onclick="searchOrder()"><i class="fa fa-search"></i> بحث</button>
 </div>
 
-<h3 style="display:flex; align-items:center; justify-content:space-between; margin-top:30px;">
-  📋 العمليات المسجلة
-  <input type="date" id="filterDate" title="اختر تاريخ للفلترة">
-</h3>
+<h3 style="text-align:center; margin-top:30px;">📋 العمليات المسجلة</h3>
 
 <div class="table-wrapper">
 <table id="ordersTable">
@@ -92,7 +85,6 @@ tr:nth-child(even) { background-color: #f2f2f2; }
     </thead>
     <tbody></tbody>
 </table>
-<div class="total" id="filteredTotal" style="margin-top:10px;"></div>
 </div>
 
 <div class="file-buttons">
@@ -117,7 +109,7 @@ function getToday() {
 
 function generateOrder() {
     const amount = document.getElementById("amount").value.trim();
-    if(!amount || isNaN(amount)){ alert("من فضلك املأ خانة المبلغ برقم صحيح"); return; }
+    if(!amount || isNaN(amount)){ alert("من فضلك ادخل رقم صحيح"); return; }
     const today = getToday();
     const key = "orders_" + today;
     let count = localStorage.getItem(key);
@@ -150,11 +142,9 @@ function copyOrder(){
     setTimeout(()=>{ btn.innerHTML = '<i class="fa fa-copy"></i> نسخ رقم الأمر'; },1000);
 }
 
-function updateOrdersTable(filteredDate="") {
+function updateOrdersTable() {
     const tbody = document.getElementById("ordersTable").querySelector("tbody");
     tbody.innerHTML = "";
-    let totalAmount = 0;
-
     let orders = [];
     for(let i=0;i<localStorage.length;i++){
         const key = localStorage.key(i);
@@ -163,21 +153,13 @@ function updateOrdersTable(filteredDate="") {
             orders.push({order:key, amount:data.amount, date:data.date});
         }
     }
-
     orders.sort((a,b)=> b.order.localeCompare(a.order));
-
     orders.forEach(item=>{
-        const orderDate = new Date(item.date).toISOString().slice(0,10);
-        if(filteredDate && orderDate !== filteredDate) return;
-
         const tr = document.createElement("tr");
         tr.innerHTML = `<td>${item.order}</td><td>${item.amount}</td><td class="date-time">${item.date}</td>`;
         if(item.order === lastOrderNumber) tr.classList.add("last-order");
         tbody.appendChild(tr);
-        if(!filteredDate) totalAmount += parseFloat(item.amount);
     });
-
-    document.getElementById("filteredTotal").textContent = filteredDate ? "مجموع المبالغ: " + totalAmount : "";
 }
 
 function searchOrder(){
@@ -197,11 +179,6 @@ function searchOrder(){
         tbody.innerHTML = `<tr><td colspan="3">❌ الرقم غير موجود</td></tr>`;
     }
 }
-
-document.getElementById("filterDate").addEventListener("change", function(){
-    const selectedDate = this.value;
-    updateOrdersTable(selectedDate);
-});
 
 function exportToExcel(){
     let ordersArr = [];
@@ -234,8 +211,7 @@ function importOrders(){
                 localStorage.setItem(r["رقم الأمر"], JSON.stringify({amount:r["المبلغ"], date:r["التاريخ والوقت"]}));
             }
         });
-        const selectedDate = document.getElementById("filterDate").value;
-        updateOrdersTable(selectedDate);
+        updateOrdersTable();
         alert("✅ تم استيراد البيانات من Excel");
     };
     reader.readAsArrayBuffer(file);
