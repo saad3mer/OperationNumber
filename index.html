@@ -58,7 +58,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 
 <div class="container">
 <div class="box">
-<h3>🔢 Z-Orders</h3>
+<h3>🔢 Orders</h3>
 <input id="amount" placeholder="ادخل المبلغ">
 
 <div style="display:flex; gap:10px; margin-top:10px;">
@@ -116,7 +116,7 @@ function generateOrder() {
     count = count ? parseInt(count)+1 : 1;
     localStorage.setItem(key,count);
 
-    const orderNumber = `Z-${today}${String(count).padStart(6,'0')}`;
+    const orderNumber = `${today}${String(count).padStart(6,'0')}`;
     lastOrderNumber = orderNumber;
 
     const data = { amount: amount, date: new Date().toLocaleString() };
@@ -224,3 +224,4 @@ updateOrdersTable();
 </script>
 </body>
 </html>
+
